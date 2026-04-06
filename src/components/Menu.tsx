@@ -17,7 +17,7 @@ const GAMES: GameCard[] = [
   {
     id: 'caccia',
     title: 'Caccia alla Curiosità',
-    description: '10 domande bizzarre, 6 carte, solo 2 giuste. 8 secondi. Un errore = game over.',
+    description: '10 domande bizzarre, 6 carte, solo 1 giusta. 8 secondi. Un errore = game over.',
     emoji: '🃏',
     gradient: 'from-[#1a1535] to-[#251845]',
     borderColor: 'border-[#3d2a6e]',

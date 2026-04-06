@@ -15,8 +15,7 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
     const shuffled = [...CURIOSITY_DB].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 25).map(q => ({
       ...q,
-      wrong: [...q.wrong].sort(() => Math.random() - 0.5).slice(0, 4),
-      correct: [...q.correct].sort(() => Math.random() - 0.5)
+      wrong: [...q.wrong].sort(() => Math.random() - 0.5).slice(0, 5)
     }));
   });
 
@@ -29,7 +28,7 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
 
   const allAnswers = useMemo(() => {
     const q = questions[currentIdx];
-    return [...q.correct.slice(0, 2), ...q.wrong.slice(0, 4)].sort(() => Math.random() - 0.5);
+    return [q.correct, ...q.wrong.slice(0, 5)].sort(() => Math.random() - 0.5);
   }, [questions, currentIdx]);
 
   const nextQuestion = useCallback(() => {
@@ -58,8 +57,7 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
     // Rimescoliamo per il nuovo livello
     setQuestions([...CURIOSITY_DB].sort(() => Math.random() - 0.5).slice(0, 25).map(q => ({
       ...q,
-      wrong: [...q.wrong].sort(() => Math.random() - 0.5).slice(0, 4),
-      correct: [...q.correct].sort(() => Math.random() - 0.5)
+      wrong: [...q.wrong].sort(() => Math.random() - 0.5).slice(0, 5)
     })));
   };
 
@@ -83,7 +81,7 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
   const handleAnswer = (answer: string) => {
     if (selectedAnswer !== null) return;
     
-    const correct = questions[currentIdx].correct.includes(answer);
+    const correct = questions[currentIdx].correct === answer;
     setSelectedAnswer(answer);
     setIsCorrect(correct);
 
@@ -173,7 +171,7 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
         <AnimatePresence mode="wait">
           {allAnswers.map((answer, i) => {
             const isSelected = selectedAnswer === answer;
-            const isActuallyCorrect = currentQ.correct.includes(answer);
+            const isActuallyCorrect = currentQ.correct === answer;
             
             let bgColor = 'bg-white/5 border-white/10';
             if (selectedAnswer !== null) {

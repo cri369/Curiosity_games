@@ -6,7 +6,7 @@ export async function generateNewQuestions() {
   try {
     const response = await genAI.models.generateContent({
       model: "gemini-2.0-flash-exp",
-      contents: "Genera 5 nuove curiosità bizzarre per un quiz. Ogni curiosità deve avere una domanda, 2 risposte corrette e 4 risposte sbagliate plausibili. Rispondi in formato JSON.",
+      contents: "Genera 5 nuove curiosità bizzarre per un quiz. Ogni curiosità deve avere una domanda, 1 risposta corretta e 5 risposte sbagliate plausibili. Rispondi in formato JSON.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -15,7 +15,7 @@ export async function generateNewQuestions() {
             type: Type.OBJECT,
             properties: {
               q: { type: Type.STRING },
-              correct: { type: Type.ARRAY, items: { type: Type.STRING } },
+              correct: { type: Type.STRING },
               wrong: { type: Type.ARRAY, items: { type: Type.STRING } }
             },
             required: ["q", "correct", "wrong"]
