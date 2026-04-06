@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SPRINT_FACTS } from '../../constants';
 import { GameResult } from '../GameResult';
-import { Check, X, Timer } from 'lucide-react';
+import { Check, X, Timer, Volume2, VolumeX } from 'lucide-react';
 
 interface VeroFalsoProps {
   onMenu: () => void;
@@ -21,6 +21,25 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
   const [timeLeft, setTimeLeft] = useState(5); // Molto rapido: 5 secondi
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost' | 'levelUp'>('playing');
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Audio for ticking
+  useEffect(() => {
+    if (gameState !== 'playing' || feedback !== null || isMuted) return;
+
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    tickAudio.volume = 0.3;
+    
+    // Play tick every second when timeLeft changes
+    if (timeLeft > 0) {
+      tickAudio.play().catch(() => {}); // Catch browser autoplay block
+    }
+
+    return () => {
+      tickAudio.pause();
+      tickAudio.currentTime = 0;
+    };
+  }, [timeLeft, gameState, feedback, isMuted]);
 
   const nextQuestion = useCallback(() => {
     const target = questionsPerLevel[levelTier];
@@ -148,6 +167,12 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
             <Timer size={18} />
             <span className="text-2xl font-black font-mono">{timeLeft}s</span>
           </div>
+          <button 
+            onClick={() => setIsMuted(!isMuted)}
+            className="mt-2 text-gray-500 hover:text-white transition-colors"
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
         </div>
 
         <div className="flex flex-col items-end">
