@@ -26,21 +26,27 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
 
   // Audio for ticking
   useEffect(() => {
-    if (gameState !== 'playing' || feedback !== null || isMuted) return;
+    if (gameState !== 'playing' || feedback !== null || isMuted || !hasStarted) return;
 
-    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-    tickAudio.volume = 0.3;
+    // Use a slightly different tick sound URL
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+    tickAudio.volume = 0.2;
     
     // Play tick every second when timeLeft changes
     if (timeLeft > 0) {
-      tickAudio.play().catch(() => {}); // Catch browser autoplay block
+      const playPromise = tickAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay was prevented
+        });
+      }
     }
 
     return () => {
       tickAudio.pause();
       tickAudio.currentTime = 0;
     };
-  }, [timeLeft, gameState, feedback, isMuted]);
+  }, [timeLeft, gameState, feedback, isMuted, hasStarted]);
 
   const nextQuestion = useCallback(() => {
     const target = questionsPerLevel[levelTier];
@@ -82,10 +88,10 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
     if (!isMuted) {
       const soundUrl = isCorrect 
         ? 'https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3' // Ding
-        : 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'; // Wrong
+        : 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3'; // Buzzer (951 is very distinct)
       const audio = new Audio(soundUrl);
-      audio.volume = 0.4;
-      audio.play().catch(() => {});
+      audio.volume = 0.5;
+      audio.play().catch(e => console.error("Audio play failed:", e));
     }
 
     if (isCorrect) {
