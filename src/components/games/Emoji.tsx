@@ -9,16 +9,45 @@ interface EmojiProps {
 }
 
 export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
+  const [levelTier, setLevelTier] = useState<1 | 2 | 3>(1);
+  const puzzlesPerLevel = { 1: 10, 2: 15, 3: 25 };
+  
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
-  const [gameState, setGameState] = useState<'playing' | 'result'>('playing');
+  const [gameState, setGameState] = useState<'playing' | 'result' | 'levelUp'>('playing');
   const [inputValue, setInputValue] = useState('');
   const [feedback, setFeedback] = useState<{ text: string; type: 'correct' | 'wrong' | 'skip' | null }>({ text: '', type: null });
   const [startTime, setStartTime] = useState(Date.now());
   
-  const maxTime = 120;
+  const maxTime = levelTier === 1 ? 120 : levelTier === 2 ? 180 : 300;
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const nextPuzzle = () => {
+    const target = puzzlesPerLevel[levelTier];
+    if (currentIdx < target - 1) {
+      setCurrentIdx(prev => prev + 1);
+      setInputValue('');
+      setFeedback({ text: '', type: null });
+      setStartTime(Date.now());
+      inputRef.current?.focus();
+    } else {
+      if (levelTier < 3) {
+        setGameState('levelUp');
+      } else {
+        setGameState('result');
+      }
+    }
+  };
+
+  const handleLevelUp = () => {
+    setLevelTier(prev => (prev + 1) as 1 | 2 | 3);
+    setCurrentIdx(0);
+    setInputValue('');
+    setFeedback({ text: '', type: null });
+    setStartTime(Date.now());
+    setGameState('playing');
+  };
 
   useEffect(() => {
     if (gameState === 'playing') {
@@ -68,25 +97,41 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
     setTimeout(nextPuzzle, 1000);
   };
 
-  const nextPuzzle = () => {
-    if (currentIdx < 9) {
-      setCurrentIdx(prev => prev + 1);
-      setInputValue('');
-      setFeedback({ text: '', type: null });
-      setStartTime(Date.now());
-      inputRef.current?.focus();
-    } else {
-      setGameState('result');
-    }
-  };
+  if (gameState === 'levelUp') {
+    const nextTier = levelTier + 1;
+    const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
+    const nextCount = nextTier === 2 ? 15 : 25;
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center justify-center h-full p-6 text-center"
+      >
+        <div className="text-7xl mb-6">🎨</div>
+        <h2 className="text-4xl font-black mb-2 text-fuchsia-400">LIVELLO COMPLETATO!</h2>
+        <p className="text-xl mb-8 text-slate-400">
+          Sei pronto per il livello <span className="text-yellow-400 font-bold">{tierName}</span>?<br/>
+          Ti aspettano <span className="text-white font-bold">{nextCount} puzzle</span>!
+        </p>
+        <button 
+          onClick={handleLevelUp}
+          className="px-12 py-4 rounded-2xl font-bold text-xl transition-all active:scale-95 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-lg shadow-fuchsia-500/20"
+        >
+          Inizia Livello {nextTier}
+        </button>
+      </motion.div>
+    );
+  }
 
   if (gameState === 'result') {
+    const tierName = levelTier === 1 ? 'Base' : levelTier === 2 ? 'Super' : 'Campione';
     return (
       <GameResult 
         won={totalTime < maxTime}
         score={score}
-        maxScore={100}
-        title={totalTime < maxTime ? 'EMOJI MASTER!' : 'TEMPO SCADUTO'}
+        maxScore={puzzlesPerLevel[levelTier] * 15}
+        title={totalTime < maxTime ? `EMOJI ${tierName.toUpperCase()}!` : 'TEMPO SCADUTO'}
         subtitle={`Punti: ${score} · Tempo: ${totalTime}s`}
         onRetry={() => window.location.reload()}
         onMenu={onMenu}
@@ -95,17 +140,22 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
     );
   }
 
-  const puzzle = EMOJI_PUZZLES[currentIdx];
+  const puzzle = EMOJI_PUZZLES[currentIdx % EMOJI_PUZZLES.length];
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4 max-w-2xl mx-auto text-center">
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-500 uppercase tracking-widest">
-          <span className="text-fuchsia-400">Puzzle {currentIdx + 1}/10</span>
-          <span className="text-yellow-400">Score: {score}</span>
-          <span className={totalTime > 100 ? 'text-red-400 animate-pulse' : ''}>
-            Tempo: {maxTime - totalTime}s
-          </span>
+          <div className="flex flex-col text-left">
+            <span className="text-fuchsia-400 font-bold">LIVELLO {levelTier === 1 ? 'BASE' : levelTier === 2 ? 'SUPER' : 'CAMPIONE'}</span>
+            <span>Puzzle {currentIdx + 1}/{puzzlesPerLevel[levelTier]}</span>
+          </div>
+          <div className="flex flex-col text-right">
+            <span className="text-yellow-400">Score: {score}</span>
+            <span className={totalTime > maxTime * 0.8 ? 'text-red-400 animate-pulse' : ''}>
+              Tempo: {maxTime - totalTime}s
+            </span>
+          </div>
         </div>
         <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
           <motion.div 

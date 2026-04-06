@@ -8,10 +8,12 @@ interface OblioProps {
 }
 
 export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
-  const levelCounts = [3, 4, 4, 5, 6, 7, 8, 10];
+  const [levelTier, setLevelTier] = useState<1 | 2 | 3>(1);
+  const stepsPerLevel = { 1: 10, 2: 15, 3: 25 };
+  
   const [level, setLevel] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
-  const [phase, setPhase] = useState<'memo' | 'input' | 'result'>('memo');
+  const [phase, setPhase] = useState<'memo' | 'input' | 'result' | 'levelUp'>('memo');
   const [currentWords, setCurrentWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
@@ -21,11 +23,13 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
 
   useEffect(() => {
     if (phase === 'memo') {
-      const words = [...MEMORY_WORDS_POOL].sort(() => Math.random() - 0.5).slice(0, levelCounts[level]);
+      // Difficoltà crescente: più parole man mano che si avanza
+      const wordCount = 3 + Math.floor(level / 3);
+      const words = [...MEMORY_WORDS_POOL].sort(() => Math.random() - 0.5).slice(0, wordCount);
       setCurrentWords(words);
       setSelectedWords(new Set());
       
-      const showTime = 3000 + levelCounts[level] * 800;
+      const showTime = 3000 + wordCount * 800;
       let start = Date.now();
       
       const timer = setInterval(() => {
@@ -54,24 +58,61 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
 
     if (newSelected.size === currentWords.length) {
       setTimeout(() => {
-        if (level < 7) {
+        const target = stepsPerLevel[levelTier];
+        if (level < target - 1) {
           setLevel(prev => prev + 1);
           setPhase('memo');
         } else {
-          setPhase('result');
+          if (levelTier < 3) setPhase('levelUp');
+          else setPhase('result');
         }
       }, 800);
     }
   };
 
+  const handleLevelUp = () => {
+    setLevelTier(prev => (prev + 1) as 1 | 2 | 3);
+    setLevel(0);
+    setTotalErrors(0);
+    setPhase('memo');
+  };
+
+  if (phase === 'levelUp') {
+    const nextTier = levelTier + 1;
+    const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
+    const nextCount = stepsPerLevel[nextTier as 1|2|3];
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center justify-center h-full p-6 text-center"
+      >
+        <div className="text-7xl mb-6">🧠</div>
+        <h2 className="text-4xl font-black mb-2 text-cyan-400">LIVELLO COMPLETATO!</h2>
+        <p className="text-xl mb-8 text-slate-400">
+          Sei pronto per il livello <span className="text-yellow-400 font-bold">{tierName}</span>?<br/>
+          Ti aspettano <span className="text-white font-bold">{nextCount} sequenze</span>!
+        </p>
+        <button 
+          onClick={handleLevelUp}
+          className="px-12 py-4 rounded-2xl font-bold text-xl transition-all active:scale-95 bg-gradient-to-r from-cyan-600 to-blue-500 text-white shadow-lg shadow-cyan-500/20"
+        >
+          Inizia Livello {nextTier}
+        </button>
+      </motion.div>
+    );
+  }
+
   if (phase === 'result' || totalErrors >= maxErrors) {
+    const tierName = levelTier === 1 ? 'Base' : levelTier === 2 ? 'Super' : 'Campione';
     return (
       <GameResult 
         won={phase === 'result' && totalErrors < maxErrors}
         score={level}
-        maxScore={8}
-        title={phase === 'result' ? 'MEMORIA PERFETTA!' : 'TROPPI ERRORI'}
-        subtitle={phase === 'result' ? 'Tutti gli 8 livelli completati!' : `Arrivato al livello ${level + 1}`}
+        maxScore={stepsPerLevel[levelTier]}
+        title={phase === 'result' ? `OBLIO ${tierName.toUpperCase()}!` : 'TROPPI ERRORI'}
+        subtitle={phase === 'result' ? `Hai superato il livello ${tierName}!` : `Arrivato alla sequenza ${level + 1}`}
         onRetry={() => window.location.reload()}
         onMenu={onMenu}
         icon="🧠"
@@ -83,7 +124,10 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
     <div className="flex flex-col items-center justify-center h-full p-4 max-w-2xl mx-auto text-center">
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-500 uppercase tracking-widest">
-          <span>Livello {level + 1}/8</span>
+          <div className="flex flex-col text-left">
+            <span className="text-cyan-400 font-bold">LIVELLO {levelTier === 1 ? 'BASE' : levelTier === 2 ? 'SUPER' : 'CAMPIONE'}</span>
+            <span>Sequenza {level + 1}/{stepsPerLevel[levelTier]}</span>
+          </div>
           <span className="text-red-400">Errori: {totalErrors}/{maxErrors}</span>
         </div>
         <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
