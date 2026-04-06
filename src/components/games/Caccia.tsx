@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CURIOSITY_DB } from '../../constants';
 import { GameResult } from '../GameResult';
@@ -23,6 +23,12 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  // Stabilizziamo le risposte per la domanda corrente
+  const allAnswers = useMemo(() => {
+    const q = questions[currentIdx];
+    return [...q.correct.slice(0, 2), ...q.wrong.slice(0, 4)].sort(() => Math.random() - 0.5);
+  }, [questions, currentIdx]);
 
   const nextQuestion = useCallback(() => {
     if (currentIdx < 9) {
@@ -82,7 +88,6 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
   }
 
   const currentQ = questions[currentIdx];
-  const allAnswers = [...currentQ.correct.slice(0, 2), ...currentQ.wrong.slice(0, 4)].sort(() => Math.random() - 0.5);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4 max-w-2xl mx-auto">
