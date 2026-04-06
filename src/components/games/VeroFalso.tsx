@@ -22,6 +22,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost' | 'levelUp'>('playing');
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   // Audio for ticking
   useEffect(() => {
@@ -96,6 +97,31 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
     setFacts([...SPRINT_FACTS].sort(() => Math.random() - 0.5).slice(0, 25));
   };
 
+  if (!hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center bg-[#0f0a1e]">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#251845] p-10 rounded-[3rem] border-4 border-[#00ffff] shadow-[0_0_50px_rgba(0,255,255,0.2)] max-w-sm w-full"
+        >
+          <div className="text-6xl mb-6">⚖️</div>
+          <h2 className="text-4xl font-black mb-4 text-[#00ffff]">VERO O FALSO?</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Hai solo <span className="text-white font-bold">5 secondi</span> per ogni domanda. <br/>
+            Non farti prendere dal panico!
+          </p>
+          <button
+            onClick={() => setHasStarted(true)}
+            className="w-full py-5 bg-gradient-to-r from-[#00ffff] to-[#ff00ff] rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+          >
+            GIOCA ORA
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (gameState === 'levelUp') {
     const nextTier = levelTier + 1;
     const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
@@ -163,15 +189,16 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
         </div>
         
         <div className="flex flex-col items-center">
-          <div className={`flex items-center gap-2 px-4 py-1 rounded-full border-2 ${timeLeft <= 2 ? 'border-red-500 text-red-500 animate-pulse' : 'border-[#ff00ff] text-[#ff00ff]'}`}>
-            <Timer size={18} />
-            <span className="text-2xl font-black font-mono">{timeLeft}s</span>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 bg-black/20 ${timeLeft <= 2 ? 'border-red-500 text-red-500 animate-pulse' : 'border-[#ff00ff] text-[#ff00ff]'}`}>
+            <Timer size={20} />
+            <span className="text-3xl font-black font-mono">{timeLeft}s</span>
           </div>
           <button 
             onClick={() => setIsMuted(!isMuted)}
-            className="mt-2 text-gray-500 hover:text-white transition-colors"
+            className="mt-3 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10"
+            title={isMuted ? "Attiva audio" : "Disattiva audio"}
           >
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
         </div>
 
