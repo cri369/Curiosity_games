@@ -4,10 +4,11 @@ import { Caccia } from './components/games/Caccia';
 import { Oblio } from './components/games/Oblio';
 import { Sprint } from './components/games/Sprint';
 import { Emoji } from './components/games/Emoji';
+import { VeroFalso } from './components/games/VeroFalso';
 import { ArrowLeft, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-type GameType = 'caccia' | 'oblio' | 'sprint' | 'emoji' | null;
+type GameType = 'caccia' | 'oblio' | 'sprint' | 'emoji' | 'verofalso' | null;
 
 export default function App() {
   const [currentGame, setCurrentGame] = useState<GameType>(null);
@@ -18,6 +19,7 @@ export default function App() {
       case 'oblio': return <Oblio onMenu={() => setCurrentGame(null)} />;
       case 'sprint': return <Sprint onMenu={() => setCurrentGame(null)} />;
       case 'emoji': return <Emoji onMenu={() => setCurrentGame(null)} />;
+      case 'verofalso': return <VeroFalso onMenu={() => setCurrentGame(null)} />;
       default: return null;
     }
   };

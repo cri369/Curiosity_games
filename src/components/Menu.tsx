@@ -49,6 +49,15 @@ const GAMES: GameCard[] = [
     gradient: 'from-[#1a0d2a] to-[#2a1540]',
     borderColor: 'border-[#5d2a8e]',
     textColor: 'text-[#e879f9]'
+  },
+  {
+    id: 'verofalso',
+    title: 'Vero o Falso?',
+    description: 'Sfida rapidissima! Decidi se la curiosità è vera o falsa in meno di 5 secondi. 3 livelli di difficoltà.',
+    emoji: '⚖️',
+    gradient: 'from-[#0d2a1a] to-[#15402a]',
+    borderColor: 'border-[#2a8e5d]',
+    textColor: 'text-[#79f9a8]'
   }
 ];
 
@@ -78,7 +87,7 @@ export const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
         </h1>
         <div className="flex flex-col items-center gap-4">
           <p className="text-sm md:text-base font-mono text-[#8b7aa8] uppercase tracking-[0.2em]">
-            3 giochi · AI Powered · Sempre Diversi
+            5 giochi · AI Powered · Sempre Diversi
           </p>
           
           <button 
