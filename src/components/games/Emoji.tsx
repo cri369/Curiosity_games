@@ -32,8 +32,9 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
 
     // Tick only in the last 20 seconds or every 5 seconds normally?
     // User said "audio così in tutti i giochi", so I'll do it every second if it's a countdown.
-    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-    tickAudio.volume = 0.3;
+    // Use a slightly different tick sound URL
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+    tickAudio.volume = 0.2;
     
     if (timeLeft > 0) {
       tickAudio.play().catch(() => {});
@@ -99,6 +100,9 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
     const bonus = Math.max(0, 10 - elapsed);
 
     if (answer === correct) {
+      if (!isMuted) {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3').play().catch(() => {});
+      }
       const points = 5 + bonus;
       setScore(s => s + points);
       setFeedback({ 
@@ -107,6 +111,9 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
       });
       setTimeout(nextPuzzle, 1200);
     } else {
+      if (!isMuted) {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3').play().catch(() => {});
+      }
       setFeedback({ text: `❌ No! Era "${puzzle.answer}"`, type: 'wrong' });
       setTimeout(nextPuzzle, 1500);
     }

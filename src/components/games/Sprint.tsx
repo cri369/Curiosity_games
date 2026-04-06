@@ -35,7 +35,7 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
   useEffect(() => {
     if (gameState !== 'playing' || isMuted || !hasStarted || fallingFacts.length === 0) return;
 
-    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
     tickAudio.volume = 0.2;
     
     const interval = setInterval(() => {
@@ -103,6 +103,9 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
     setFallingFacts(prev => prev.filter(f => f.id !== fact.id));
 
     if (fact.isTrue) {
+      if (!isMuted) {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3').play().catch(() => {});
+      }
       setHits(h => {
         if (h + 1 >= TARGET) {
           if (levelTier < 3) setGameState('levelUp');
@@ -112,6 +115,9 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
       });
       addFloatingText('✅', x, y);
     } else {
+      if (!isMuted) {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3').play().catch(() => {});
+      }
       setLives(l => {
         if (l <= 1) setGameState('lost');
         return l - 1;

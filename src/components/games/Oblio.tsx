@@ -30,7 +30,7 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
 
     // Tick every second during memo phase
     // Since timeLeft is 0-100, we need to calculate seconds
-    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
     tickAudio.volume = 0.3;
     
     const interval = setInterval(() => {
@@ -72,11 +72,24 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
   }, [level, phase]);
 
   const handleWordSelect = (word: string) => {
+    const isCorrect = currentWords.includes(word);
     const newSelected = new Set(selectedWords);
+    
     if (newSelected.has(word)) {
       newSelected.delete(word);
     } else {
       newSelected.add(word);
+      // Play sound only when selecting a new word
+      if (!isMuted) {
+        const soundUrl = isCorrect 
+          ? 'https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3' 
+          : 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3';
+        new Audio(soundUrl).play().catch(() => {});
+      }
+      
+      if (!isCorrect) {
+        setTotalErrors(prev => prev + 1);
+      }
     }
     setSelectedWords(newSelected);
 

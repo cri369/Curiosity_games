@@ -33,8 +33,9 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
   useEffect(() => {
     if (gameState !== 'playing' || selectedAnswer !== null || isMuted || !hasStarted) return;
 
-    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-    tickAudio.volume = 0.3;
+    // Use a slightly different tick sound URL
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+    tickAudio.volume = 0.2;
     
     if (timeLeft > 0) {
       tickAudio.play().catch(() => {});
@@ -104,6 +105,15 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
     const correct = questions[currentIdx].correct === answer;
     setSelectedAnswer(answer);
     setIsCorrect(correct);
+
+    if (!isMuted) {
+      const soundUrl = correct 
+        ? 'https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3' 
+        : 'https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3';
+      const audio = new Audio(soundUrl);
+      audio.volume = 0.4;
+      audio.play().catch(() => {});
+    }
 
     if (correct) {
       setScore(prev => prev + 1);
