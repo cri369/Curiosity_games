@@ -18,7 +18,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(5); // Molto rapido: 5 secondi
+  const [timeLeft, setTimeLeft] = useState(10); // 10 secondi
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost' | 'levelUp'>('playing');
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -46,7 +46,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
     const target = questionsPerLevel[levelTier];
     if (currentIdx < target - 1) {
       setCurrentIdx(prev => prev + 1);
-      setTimeLeft(5);
+      setTimeLeft(10);
       setFeedback(null);
     } else {
       if (levelTier < 3) {
@@ -79,6 +79,15 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
     const isCorrect = facts[currentIdx].true === userChoice;
     setFeedback(isCorrect ? 'correct' : 'wrong');
 
+    if (!isMuted) {
+      const soundUrl = isCorrect 
+        ? 'https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3' // Ding
+        : 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'; // Wrong
+      const audio = new Audio(soundUrl);
+      audio.volume = 0.4;
+      audio.play().catch(() => {});
+    }
+
     if (isCorrect) {
       setScore(prev => prev + 1);
       setTimeout(nextQuestion, 400); // Più veloce!
@@ -92,7 +101,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
     setCurrentIdx(0);
     setGameState('playing');
     setFeedback(null);
-    setTimeLeft(5);
+    setTimeLeft(10);
     // Rimescoliamo per il nuovo livello
     setFacts([...SPRINT_FACTS].sort(() => Math.random() - 0.5).slice(0, 25));
   };
@@ -108,7 +117,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
           <div className="text-6xl mb-6">⚖️</div>
           <h2 className="text-4xl font-black mb-4 text-[#00ffff]">VERO O FALSO?</h2>
           <p className="text-gray-400 mb-8 leading-relaxed">
-            Hai solo <span className="text-white font-bold">5 secondi</span> per ogni domanda. <br/>
+            Hai solo <span className="text-white font-bold">10 secondi</span> per ogni domanda. <br/>
             Non farti prendere dal panico!
           </p>
           <button
@@ -165,7 +174,7 @@ export const VeroFalso: React.FC<VeroFalsoProps> = ({ onMenu }) => {
           setCurrentIdx(0);
           setLevelTier(1);
           setGameState('playing');
-          setTimeLeft(5);
+          setTimeLeft(10);
           setFeedback(null);
           setFacts([...SPRINT_FACTS].sort(() => Math.random() - 0.5).slice(0, 25));
         }}
