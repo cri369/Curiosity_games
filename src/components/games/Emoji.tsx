@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EMOJI_PUZZLES } from '../../constants';
 import { GameResult } from '../GameResult';
-import { Send, SkipForward } from 'lucide-react';
+import { Send, SkipForward, Volume2, VolumeX, Timer } from 'lucide-react';
 
 interface EmojiProps {
   onMenu: () => void;
@@ -19,9 +19,31 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
   const [inputValue, setInputValue] = useState('');
   const [feedback, setFeedback] = useState<{ text: string; type: 'correct' | 'wrong' | 'skip' | null }>({ text: '', type: null });
   const [startTime, setStartTime] = useState(Date.now());
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   
   const maxTime = levelTier === 1 ? 120 : levelTier === 2 ? 180 : 300;
+  const timeLeft = maxTime - totalTime;
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Audio for ticking
+  useEffect(() => {
+    if (gameState !== 'playing' || isMuted || !hasStarted) return;
+
+    // Tick only in the last 20 seconds or every 5 seconds normally?
+    // User said "audio così in tutti i giochi", so I'll do it every second if it's a countdown.
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    tickAudio.volume = 0.3;
+    
+    if (timeLeft > 0) {
+      tickAudio.play().catch(() => {});
+    }
+
+    return () => {
+      tickAudio.pause();
+      tickAudio.currentTime = 0;
+    };
+  }, [totalTime, gameState, isMuted, hasStarted, timeLeft]);
 
   const nextPuzzle = () => {
     const target = puzzlesPerLevel[levelTier];
@@ -97,6 +119,31 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
     setTimeout(nextPuzzle, 1000);
   };
 
+  if (!hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center bg-[#0f0a1e]">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#251845] p-10 rounded-[3rem] border-4 border-[#d946ef] shadow-[0_0_50px_rgba(217,70,239,0.2)] max-w-sm w-full"
+        >
+          <div className="text-6xl mb-6">🎨</div>
+          <h2 className="text-4xl font-black mb-4 text-[#d946ef]">EMOJI PUZZLE</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Indovina la parola nascosta dietro le emoji. <br/>
+            Hai un tempo limitato per finire il livello!
+          </p>
+          <button
+            onClick={() => setHasStarted(true)}
+            className="w-full py-5 bg-gradient-to-r from-[#d946ef] to-[#8b5cf6] rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+          >
+            GIOCA ORA
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (gameState === 'levelUp') {
     const nextTier = levelTier + 1;
     const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
@@ -152,9 +199,17 @@ export const Emoji: React.FC<EmojiProps> = ({ onMenu }) => {
           </div>
           <div className="flex flex-col text-right">
             <span className="text-yellow-400">Score: {score}</span>
-            <span className={totalTime > maxTime * 0.8 ? 'text-red-400 animate-pulse' : ''}>
-              Tempo: {maxTime - totalTime}s
-            </span>
+            <div className="flex items-center gap-2 justify-end">
+              <span className={timeLeft < 20 ? 'text-red-400 animate-pulse font-bold' : ''}>
+                Tempo: {timeLeft}s
+              </span>
+              <button 
+                onClick={() => setIsMuted(!isMuted)}
+                className="p-1 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all"
+              >
+                {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+              </button>
+            </div>
           </div>
         </div>
         <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">

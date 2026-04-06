@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CURIOSITY_DB } from '../../constants';
 import { GameResult } from '../GameResult';
+import { Volume2, VolumeX, Timer } from 'lucide-react';
 
 interface CacciaProps {
   onMenu: () => void;
@@ -25,6 +26,25 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost' | 'levelUp'>('playing');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  // Audio for ticking
+  useEffect(() => {
+    if (gameState !== 'playing' || selectedAnswer !== null || isMuted || !hasStarted) return;
+
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    tickAudio.volume = 0.3;
+    
+    if (timeLeft > 0) {
+      tickAudio.play().catch(() => {});
+    }
+
+    return () => {
+      tickAudio.pause();
+      tickAudio.currentTime = 0;
+    };
+  }, [timeLeft, gameState, selectedAnswer, isMuted, hasStarted]);
 
   const allAnswers = useMemo(() => {
     const q = questions[currentIdx];
@@ -93,6 +113,31 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
     }
   };
 
+  if (!hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center bg-[#0f0a1e]">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#251845] p-10 rounded-[3rem] border-4 border-[#a855f7] shadow-[0_0_50px_rgba(168,85,247,0.2)] max-w-sm w-full"
+        >
+          <div className="text-6xl mb-6">🚀</div>
+          <h2 className="text-4xl font-black mb-4 text-[#a855f7]">CACCIA AL VERO</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Trova la risposta corretta tra le opzioni. <br/>
+            Hai solo <span className="text-white font-bold">8 secondi</span>!
+          </p>
+          <button
+            onClick={() => setHasStarted(true)}
+            className="w-full py-5 bg-gradient-to-r from-[#a855f7] to-[#ec4899] rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+          >
+            GIOCA ORA
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (gameState === 'levelUp') {
     const nextTier = levelTier + 1;
     const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
@@ -145,9 +190,18 @@ export const Caccia: React.FC<CacciaProps> = ({ onMenu }) => {
             <span className="text-yellow-400 font-bold">LIVELLO {levelTier === 1 ? 'BASE' : levelTier === 2 ? 'SUPER' : 'CAMPIONE'}</span>
             <span>Domanda {currentIdx + 1}/{questionsPerLevel[levelTier]}</span>
           </div>
-          <span className={`font-bold ${timeLeft <= 3 ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
-            {timeLeft}s
-          </span>
+          <div className="flex flex-col items-center">
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border-2 bg-black/20 ${timeLeft <= 3 ? 'border-red-500 text-red-500 animate-pulse' : 'border-yellow-500 text-yellow-500'}`}>
+              <Timer size={14} />
+              <span className="text-xl font-black font-mono">{timeLeft}s</span>
+            </div>
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className="mt-1 p-1 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all"
+            >
+              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            </button>
+          </div>
         </div>
         <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
           <motion.div 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MEMORY_WORDS_POOL } from '../../constants';
 import { GameResult } from '../GameResult';
+import { Volume2, VolumeX, Timer } from 'lucide-react';
 
 interface OblioProps {
   onMenu: () => void;
@@ -18,8 +19,31 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(100);
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const maxErrors = 5;
+
+  // Audio for ticking during memo phase
+  useEffect(() => {
+    if (phase !== 'memo' || isMuted || !hasStarted) return;
+
+    // Tick every second during memo phase
+    // Since timeLeft is 0-100, we need to calculate seconds
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    tickAudio.volume = 0.3;
+    
+    const interval = setInterval(() => {
+      if (phase === 'memo' && !isMuted) {
+        tickAudio.play().catch(() => {});
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      tickAudio.pause();
+    };
+  }, [phase, isMuted, hasStarted]);
 
   useEffect(() => {
     if (phase === 'memo') {
@@ -77,6 +101,31 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
     setPhase('memo');
   };
 
+  if (!hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center bg-[#0f0a1e]">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#251845] p-10 rounded-[3rem] border-4 border-[#22d3ee] shadow-[0_0_50px_rgba(34,211,238,0.2)] max-w-sm w-full"
+        >
+          <div className="text-6xl mb-6">🧠</div>
+          <h2 className="text-4xl font-black mb-4 text-[#22d3ee]">OBLIO</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Memorizza le parole prima che spariscano. <br/>
+            Metti alla prova la tua memoria a breve termine!
+          </p>
+          <button
+            onClick={() => setHasStarted(true)}
+            className="w-full py-5 bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+          >
+            GIOCA ORA
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (phase === 'levelUp') {
     const nextTier = levelTier + 1;
     const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
@@ -128,7 +177,15 @@ export const Oblio: React.FC<OblioProps> = ({ onMenu }) => {
             <span className="text-cyan-400 font-bold">LIVELLO {levelTier === 1 ? 'BASE' : levelTier === 2 ? 'SUPER' : 'CAMPIONE'}</span>
             <span>Sequenza {level + 1}/{stepsPerLevel[levelTier]}</span>
           </div>
-          <span className="text-red-400">Errori: {totalErrors}/{maxErrors}</span>
+          <div className="flex items-center gap-4">
+            <span className="text-red-400">Errori: {totalErrors}/{maxErrors}</span>
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-1 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all"
+            >
+              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            </button>
+          </div>
         </div>
         <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
           <motion.div 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SPRINT_FACTS } from '../../constants';
 import { GameResult } from '../GameResult';
+import { Volume2, VolumeX, Timer } from 'lucide-react';
 
 interface SprintProps {
   onMenu: () => void;
@@ -24,9 +25,30 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost' | 'levelUp'>('playing');
   const [fallingFacts, setFallingFacts] = useState<FallingFact[]>([]);
   const [floatingTexts, setFloatingTexts] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   
   const nextId = useRef(0);
   const TARGET = hitsPerLevel[levelTier];
+
+  // Audio for ticking
+  useEffect(() => {
+    if (gameState !== 'playing' || isMuted || !hasStarted || fallingFacts.length === 0) return;
+
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    tickAudio.volume = 0.2;
+    
+    const interval = setInterval(() => {
+      if (gameState === 'playing' && !isMuted && fallingFacts.length > 0) {
+        tickAudio.play().catch(() => {});
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      tickAudio.pause();
+    };
+  }, [gameState, isMuted, hasStarted, fallingFacts.length]);
 
   const handleLevelUp = () => {
     setLevelTier(prev => (prev + 1) as 1 | 2 | 3);
@@ -106,6 +128,31 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
     }, 600);
   };
 
+  if (!hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center bg-[#0f0a1e]">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#251845] p-10 rounded-[3rem] border-4 border-[#eab308] shadow-[0_0_50px_rgba(234,179,8,0.2)] max-w-sm w-full"
+        >
+          <div className="text-6xl mb-6">⚡</div>
+          <h2 className="text-4xl font-black mb-4 text-[#eab308]">Fatti SPRINT</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Cattura i fatti <span className="text-green-400 font-bold">VERI</span> prima che cadano. <br/>
+            Evita quelli <span className="text-red-400 font-bold">FALSI</span>!
+          </p>
+          <button
+            onClick={() => setHasStarted(true)}
+            className="w-full py-5 bg-gradient-to-r from-[#eab308] to-[#f97316] rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+          >
+            GIOCA ORA
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (gameState === 'levelUp') {
     const nextTier = levelTier + 1;
     const tierName = nextTier === 2 ? 'SUPER' : 'CAMPIONE';
@@ -165,6 +212,12 @@ export const Sprint: React.FC<SprintProps> = ({ onMenu }) => {
           <span className="opacity-60">VITE</span>
           <span className="font-bold">{lives}</span>
         </div>
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 text-gray-500 hover:text-white transition-all pointer-events-auto"
+        >
+          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
       </div>
 
       {/* Progress Bar */}
